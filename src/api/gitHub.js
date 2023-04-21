@@ -143,6 +143,29 @@ export const fetchRepoMetrics = async (repositories) => {
       diskUsage: repo.node.diskUsage,
     };
 
+
+    let uniqueCommiters = []
+    try{
+    console.log("**********************");
+    var commiters = repo.node.defaultBranchRef.target.history.edges.map(item => item.node.committer.email.split("@")[0].toLowerCase());
+    uniqueCommiters = [...new Set(commiters)];
+    var value = "noreply";
+    uniqueCommiters = uniqueCommiters.filter(item => item !== value)
+    console.log(uniqueCommiters.join(" | "));
+    uniqueCommiters.delete
+
+     for (const hist of repo.node.defaultBranchRef.target.history.edges) {
+      //console.log("**********************");
+      //console.log(hist.node.committer.email);
+    }
+    } catch (error) {
+      console.error(error);
+      // Expected output: ReferenceError: nonExistentFunction is not defined
+      // (Note: the exact output may be browser-dependent)
+    }
+    repoInfo.commiters=uniqueCommiters.join(" | ") 
+  
+
     if (repo.node.pullRequests.totalCount > orgMetrics.mostPr) {
       orgMetrics.mostPr = repo.node.pullRequests.totalCount;
     }
@@ -205,6 +228,7 @@ export const storeRepoMetrics = async (organization) => {
     { id: "numOfReleases", title: "Number of Releases" },
     { id: "wikiEnabled", title: "Wiki Enabled" },
     { id: "diskUsage", title: "Size (KiB)" },
+    { id: "commiters", title: "Committers emails" },
   ];
 
   console.log();
@@ -312,6 +336,26 @@ export function fetchRepoInOrgInfoOptions (org, token, allowUntrustedSslCertific
                 name
                 id
                 url
+                defaultBranchRef {
+                  name
+                  target {
+                    ... on Commit {
+                      id
+                      history(first:50) {
+                        edges {
+                          node {
+                            committer {
+                              user {
+                                name
+                              }
+                              email
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
                 pushedAt
                 isPrivate
                 isArchived
@@ -328,6 +372,7 @@ export function fetchRepoInOrgInfoOptions (org, token, allowUntrustedSslCertific
   }
   return fetchOptions
 }
+
 
 /**
  * Store Organization information into separate CSV
